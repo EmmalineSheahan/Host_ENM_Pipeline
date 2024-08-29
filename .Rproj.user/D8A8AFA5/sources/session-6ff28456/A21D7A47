@@ -1,0 +1,27 @@
+{
+    "id": "A21D7A47",
+    "path": "C:/Users/emmal/Dropbox/Host-pathogen networks/Host_ENM_Pipeline/scripts/occ_cleaning.R",
+    "project_path": "scripts/occ_cleaning.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1721330361002.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "9,33",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1721912400,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1721912400075,
+    "read_only": false,
+    "read_only_alternatives": []
+}
