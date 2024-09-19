@@ -2,23 +2,26 @@
 library(rgbif)
 library(ridigbio)
 library(dplyr)
-library(dismo)
+library(predicts)
 library(CoordinateCleaner)
 library(sf)
 library(stringr)
 
 # read in host pathogen range csv
-workd <- getwd()
-worknew <- gsub('/Host_ENM_Pipeline', '', workd)
-host_data <- read.csv(paste0(worknew, '/Wheat pathogen host range.csv'))
+host_data <- read.csv('./base_data/Wheat_pathogen_host_range.csv')
 
 # get unique list of host species
 host_list <- unique(host_data$Hosts)
 two_names <- grep(' ', host_list)
 host_list <- host_list[two_names]
-remove_sp <- grep(' sp.', host_list, fixed = T)
-host_list <- host_list[-remove_sp]
-host_list <- unique(host_list)
+
+# remove known crop species
+crop_species <- read.csv('./base_data/crop-species-list.csv')
+remcrop <- which(host_list %in% crop_species$sci_name)
+host_list <- host_list[-remcrop]
+
+# writing host_list to file
+write.table(host_list, file = './base_data/host_list.txt')
 
 # for loop to pull down, clean, and thin occurrences for each species
 
@@ -28,7 +31,8 @@ for (i in seq_along(host_list)) {
   gbif_data <- occ_data(scientificName = host_list[i], hasCoordinate = T,
                          coordinateUncertaintyInMeters = '0,10000', limit = 100000)
   gbif_data <- data.frame(gbif_data$data)
-  gbif_data <- gbif_data %>% dplyr::select(scientificName, decimalLatitude, decimalLongitude,
+  gbif_data <- gbif_data %>% dplyr::select(scientificName, decimalLatitude, 
+                                           decimalLongitude,
                                          country, stateProvince, eventDate)
   
   # adjusting eventDate to match format with idigbio
@@ -38,7 +42,8 @@ for (i in seq_along(host_list)) {
   idigbio_data <- idig_search_records(rq = list("scientificname" = host_list[i], 
                                                 "geopoint" = list("type" = "exists")), 
                                       fields = "all")
-  idigbio_data <- idigbio_data %>% dplyr::select(scientificname, geopoint.lat, geopoint.lon,
+  idigbio_data <- idigbio_data %>% dplyr::select(scientificname, geopoint.lat, 
+                                                 geopoint.lon,
                                                  country, stateprovince, datecollected, 
                                                  coordinateuncertainty)
   
@@ -75,7 +80,9 @@ for (i in seq_along(host_list)) {
   
   # removing anything in the water
   
-  # removing outliers
+  # removing botanical gardens
+  
+  # removing outliars
   
   # spatial thinning
   
