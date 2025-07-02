@@ -38,7 +38,6 @@ for(i in seq_along(host_list)) {
     natrange <- st_read(paste0('./nat_ranges/', host_names[i], 
                                            '.shp'))
     natrange <- st_set_crs(natrange, target_crs)
-    natrange <- st_set_crs(natrange, target_crs)
     p <- ggplot() +
       geom_sf(data = land, fill = "darkgrey") +
       geom_sf(data = natrange, fill = "#643B9F") +
@@ -80,7 +79,6 @@ for(i in seq_along(introduced_list)) {
   if(int_names[i] %in% int_nats) {
     intrange <- st_read(paste0('./int_ranges/', int_names[i], 
                                '.shp'))
-    intrange <- st_set_crs(intrange, target_crs)
     intrange <- st_set_crs(intrange, target_crs)
     p <- ggplot() +
       geom_sf(data = land, fill = "darkgrey") +

@@ -1,8 +1,12 @@
 # retrieving and formatting environmental data
 
+install.packages("geodata")
+install.packages("gdalUtilities")
+
 library(geodata)
 library(sf)
 library(terra)
+library(gdalUtilities)
 library(rnaturalearthhires)
 library(ggplot2)
 library(tidyterra)
@@ -45,11 +49,48 @@ names(all_envs) <- c("Annual_Mean_Temperature", "Mean_Diurnal_Range", "Isotherma
                      "Total_Annual_Precipitation", "Precipitation_Seasonality", "Cloud_Cover",
                      "Aridity_Index")
 
-unit_list <- c("°C", "°C", "°C", "mm", "mm", "% Cloudy Days", "Aridity Index")
+# retrieving soil variables (ph, carbon, sand, cation exchange capacity) from soil grids
+igh <- '+proj=igh +lat_0=0 +lon_0=0 +datum=WGS84 +units=m +no_defs'
+sg_url <- "/vsicurl?max_retry=3&retry_delay=1&list_dir=no&url=https://files.isric.org/soilgrids/latest/data/"
 
-# retrieving soil variables (ph, carbon, sand, calcium) from soil grids
-# use geodata package
+wanted_soilvars <- c("phh2o", "sand", "soc", "cec")
+soil_levels <- c("0-5", "5-15", "15-30")
+soil_ras_list <- vector("list", length = 4)
+for (i in seq_along(wanted_soilvars)) {
+  for (j in seq_along(soil_levels)) {
+     gdal_translate(paste0(sg_url, wanted_soilvars[i], '/', wanted_soilvars[i], '_', 
+                               soil_levels[j],
+                  'cm_mean.vrt'),
+           paste0("./env_data/soils/", wanted_soilvars[i], "_", 
+                            soil_levels[j], "cm_mean.tif"))
+  }
+  soil_ras5 <- rast(paste0('./env_data/soils/', wanted_soilvars[i], '_0-5cm_mean.vrt'),
+                    drivers = "OGR_VRT")
+  crs(soil_ras5) <- igh
+  soil_ras15 <- rast(paste0('./env_data/soils/', wanted_soilvars[i], '_5-15cm_mean.vrt'))
+  crs(soil_ras15) <- igh
+  soil_ras30 <- rast(paste0('./env_data/soils/', wanted_soilvars[i], '_15-30cm_mean.vrt'))
+  crs(soil_ras30) <- igh
+  soil_ras5 <- project(soil_ras5, all_envs[1])
+  soil_ras15 <- project(soil_ras15, all_envs[1])
+  soil_ras30 <- project(soil_ras30, all_envs[1])
+  soilstack <- c(soil_ras5, soil_ras15, soil_ras30)
+  soil_ras_list[[i]] <- terra::app(soilstack, mean)
+}
+all_soils <- rast(soil_ras_list)
 
+# combining with other env variables
+all_envs <- c(all_envs, all_soils)
+names(all_envs) <- c("Annual_Mean_Temperature", "Mean_Diurnal_Range", "Isothermality", 
+                     "Total_Annual_Precipitation", "Precipitation_Seasonality", "Cloud_Cover",
+                     "Aridity_Index", "Soil_pH", "Sand", "Soil_Organic_Carbon",
+                     "Cation_Exchange_Capacity")
+unit_list <- c("°C", "°C", "°C", "mm", "mm", "% Cloudy Days", "Aridity Index", "pH", 
+               "g/kg", "dg/kg", "mmol(c)/kg")
+
+# writing to file
+writeRaster(all_envs, filename = './env_data/all_envs.tif', 
+            filetype = "GTiff", overwrite = T)
 
 pdf('./plots/Environmental_Variables.pdf')
 for (i in 1:dim(all_envs)[3]) {
