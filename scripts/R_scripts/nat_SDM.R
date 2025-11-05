@@ -10,7 +10,7 @@ library(geodata)
 library(usdm)
 library(ggplot2)
 
-source('./scripts/var_remove_and_select.R')
+source('./scripts/R_scripts/var_remove_and_select.R')
 
 # setting up array
 start_num <- as.numeric(Sys.getenv("START_NUM"))
@@ -62,14 +62,14 @@ if(acc_size < 10000) {
     {
     bgs <- backgroundSample(mask = envs_mask, n = round((acc_size*0.9)), p = occs[,1:2],
                           excludep = T)
-    }, warning = function(w) w)
-  while(is(tt, "warning")) {
+    }, error = function(w) w)
+  while(is(tt, "error")) {
     tt <- tryCatch(
       {
         bgs <- backgroundSample(mask = envs_mask, n = round((acc_size*0.9)), 
                                 p = occs[,1:2],
                                 excludep = T)
-      }, warning = function(w) w)
+      }, error = function(w) w)
     initial_try <- initial_try+1
   }
 } else {
@@ -289,4 +289,4 @@ p <- ggplot() +
         axis.text = element_text(size = 6))
 print(p)
 dev.off()
-  
+
